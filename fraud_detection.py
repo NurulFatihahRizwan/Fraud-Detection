@@ -20,25 +20,19 @@ from sklearn.metrics import accuracy_score, confusion_matrix, classification_rep
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-# ==============================
 # 1. LOAD DATA
-# ==============================
 filename = "fraud_oracle (1).csv"
 df = pd.read_csv(filename, na_values=['?', 'UNKNOWN', 'nan'])
 print(f"✓ Loaded {len(df)} rows and {len(df.columns)} columns")
 
-# ==============================
 # 2. DETECT TARGET COLUMN
-# ==============================
 target_options = [col for col in df.columns if 'fraud' in col.lower()]
 if not target_options:
     raise ValueError("No fraud column found in the dataset!")
 target = target_options[0]
 print(f"✓ Target column detected: {target}")
 
-# ==============================
 # 3. DATA CLEANING
-# ==============================
 # Fill numeric missing values with median
 numeric_cols = df.select_dtypes(include=np.number).columns
 df[numeric_cols] = df[numeric_cols].fillna(df[numeric_cols].median())
@@ -56,24 +50,18 @@ y = df[target].apply(lambda x: 1 if str(x).lower() in ['y', 'yes', '1'] else 0)
 # Drop target from features
 X_raw = df.drop(columns=[target])
 
-# ==============================
 # 5. ENCODE CATEGORICAL FEATURES
-# ==============================
 cat_cols = X_raw.select_dtypes(include='object').columns
 X_encoded = pd.get_dummies(X_raw, columns=cat_cols, drop_first=True)
 
 print(f"✓ Features after encoding: {X_encoded.shape[1]}")
 
-# ==============================
 # 6. TRAIN / TEST SPLIT
-# ==============================
 X_train, X_test, y_train, y_test = train_test_split(
     X_encoded, y, test_size=0.2, random_state=42, stratify=y
 )
 
-# ==============================
 # 7. TRAIN RANDOM FOREST MODEL
-# ==============================
 model = RandomForestClassifier(
     n_estimators=100,
     class_weight='balanced',
@@ -85,15 +73,12 @@ print("\nTraining Random Forest model...")
 model.fit(X_train, y_train)
 print("✓ Model trained successfully")
 
-# ==============================
 # 8. PREDICTIONS
-# ==============================
 y_pred = model.predict(X_test)
 y_prob = model.predict_proba(X_test)[:, 1]
 
-# ==============================
+
 # 9. SAVE PREDICTIONS FOR POWER BI (MOST IMPORTANT)
-# ==============================
 pred_df = X_test.copy()
 pred_df['Actual'] = y_test.values
 pred_df['Predicted'] = y_pred
@@ -102,9 +87,7 @@ pred_df['Fraud_Prob'] = y_prob
 pred_df.to_csv('fraud_predictions.csv', index=False)
 print("✓ fraud_predictions.csv saved (Power BI ready)")
 
-# ==============================
 # 10. MODEL EVALUATION
-# ==============================
 acc = accuracy_score(y_test, y_pred)
 auc = roc_auc_score(y_test, y_prob)
 
